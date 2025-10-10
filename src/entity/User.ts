@@ -27,8 +27,17 @@ export class User extends BaseEntity {
   @Column()
   age: number;
 
+  @Field()
+  @Column({ unique: true })
+  email: string;
+
+  @Column()
+  password: string;
+
   // One-to-Many
-  // User memiliki banyak Postz
-  @OneToMany(() => Post, (post) => post.author)
+  // User memiliki banyak Post
+  @OneToMany(() => Post, (post) => post.author, {
+    onDelete: "CASCADE",
+  })
   posts: Post[];
 }

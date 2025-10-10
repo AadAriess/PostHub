@@ -4,8 +4,10 @@
    "description": "Awesome project developed with TypeORM.",
    "type": "commonjs",
    "devDependencies": {
+      "@types/bcrypt": "^6.0.0",
       "@types/express": "^5.0.3",
       "@types/graphql": "^14.2.3",
+      "@types/jsonwebtoken": "^9.0.10",
       "@types/node": "^22.18.8",
       "ts-node": "^10.9.2",
       "typescript": "^5.9.3"
@@ -13,9 +15,12 @@
    "dependencies": {
       "@apollo/server": "^5.0.0",
       "apollo-server-express": "^3.13.0",
+      "bcrypt": "^6.0.0",
       "class-validator": "^0.14.2",
-      "express": "^5.1.0",
+      "dotenv": "^17.2.3",
+      "express": "^4.21.2",
       "graphql": "^16.11.0",
+      "jsonwebtoken": "^9.0.2",
       "mysql2": "^3.14.0",
       "reflect-metadata": "^0.2.2",
       "type-graphql": "^2.0.0-rc.2",

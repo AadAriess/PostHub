@@ -7,6 +7,7 @@ import {
   JoinColumn,
   ManyToMany,
   JoinTable,
+  OneToMany,
 } from "typeorm";
 import { User } from "./User";
 import { Tag } from "./Tag";
@@ -34,4 +35,20 @@ export class Post extends BaseEntity {
   @ManyToMany(() => Tag, (tag) => tag.posts)
   @JoinTable()
   tags: Tag[];
+
+  // Self-Referencing (Tree Entity)
+  // Many-to-One ke Post: Hanya memiliki 1 Parent
+  @ManyToOne(() => Post, (post) => post.children, {
+    nullable: true,
+    onDelete: "CASCADE",
+  })
+  @JoinColumn({ name: "parentId" })
+  parent: Post;
+
+  @Column({ nullable: true })
+  parentId: number | null;
+
+  // One-to-Many ke Post: Dapat memiliki banyak Children
+  @OneToMany(() => Post, (post) => post.parent)
+  children: Post[];
 }
