@@ -5,17 +5,57 @@ import { Comment } from "../entity/Comment";
 @Resolver(Post)
 export class PostResolver {
   // --- QUERY (Ambil Data) ---
-  // Query untuk mengambil satu Post beserta seluruh komentar (level 1 dan balasan)
+  // Mengambil semua Post
+  @Query(() => [Post], {
+    description: "Mengambil daftar semua Post tanpa memuat semua komentar",
+  })
+  async getAllPosts(): Promise<Post[]> {
+    const posts = await Post.find({
+      relations: { author: true, tags: true },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+
+        author: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        },
+
+        tags: {
+          id: true,
+          name: true,
+        },
+      },
+      order: { id: "DESC" },
+    });
+
+    return posts;
+  }
+
+  // Mengambil satu Post beserta seluruh komentar (detail)
   @Query(() => Post, { nullable: true })
   async getPostWithComments(
     @Arg("id", () => Int) id: number
   ): Promise<Post | null> {
-    // 1. Muat Postingan Utama dan relasi non-komentar
     const post = await Post.findOne({
       where: { id: id },
       relations: {
         author: true,
         tags: true,
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        authorId: true,
+        author: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        },
+        tags: { id: true, name: true },
       },
     });
 
@@ -23,7 +63,7 @@ export class PostResolver {
       return null;
     }
 
-    // 2. Muat Komentar Level 1 secara terpisah dengan filtering
+    // Muat Komentar Level 1 secara terpisah dengan filtering
     const commentsLevelOne = await Comment.find({
       where: {
         post: { id: id },
@@ -40,8 +80,8 @@ export class PostResolver {
       },
     });
 
-    // 3. Pasangkan hasil filter ke Post.comments
-    post.comments = commentsLevelOne;
+    // Pasangkan hasil filter ke Post.comments
+    (post as any).comments = commentsLevelOne;
 
     return post;
   }

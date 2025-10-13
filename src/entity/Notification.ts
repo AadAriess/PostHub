@@ -32,11 +32,6 @@ export class Notification extends BaseEntity {
   @Column({ type: "json", nullable: true })
   metadata: Record<string, any>;
 
-  // Status Notifikasi
-  @Field()
-  @Column({ default: false })
-  isRead: boolean;
-
   @Field()
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   createdAt: Date;

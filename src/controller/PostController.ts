@@ -9,7 +9,26 @@ export class PostController {
   async getAll(req: Request, res: Response) {
     const posts = await Post.find({
       relations: { author: true, tags: true },
+
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        authorId: true,
+
+        author: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        },
+
+        tags: {
+          id: true,
+          name: true,
+        },
+      },
     });
+
     return res.json(posts);
   }
 
