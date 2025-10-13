@@ -8,7 +8,7 @@ import {
 } from "typeorm";
 import { Int } from "type-graphql";
 import { ObjectType, Field, ID, registerEnumType } from "type-graphql";
-import { GraphQLJSONObject } from "graphql-type-json"; // Anda perlu menginstal paket ini!
+import { GraphQLJSONObject } from "graphql-type-json";
 import { User } from "./User";
 
 export enum NotificationType {
