@@ -1,68 +1,28 @@
 import "reflect-metadata";
 import { ApolloServer } from "apollo-server-express";
 import * as express from "express";
-import { buildSchema } from "type-graphql";
+import { buildSchema, AuthChecker } from "type-graphql";
 import "dotenv/config";
-import * as jwt from "jsonwebtoken";
+import RestRoutes from "./routes";
 
 // Import koneksi TypeORM
 import { AppDataSource } from "./data-source";
 
 // Import Type dan Interface Context
-import { IContext, IAuthPayload } from "./types";
+import { IContext } from "./types";
 
 // Import Resolver
 import { UserResolver } from "./resolver/UserResolver";
 import { TagResolver } from "./resolver/TagResolver";
 import { PostResolver } from "./resolver/PostResolver";
-import { CommentResolver } from "./resolver/CommentResolver";
-
-// Import Routes REST
-import RestRoutes from "./routes";
 import { NotificationResolver } from "./resolver/NotificationResolver";
+import { LogHistoryResolver } from "./resolver/LogHistoryResolver";
+import { CommentResolver } from "./resolver/CommentResolver";
+import { verifyTokenCore } from "./utils/jwtUtils";
 
-// Ambil secret key dari environment
-const JWT_SECRET = process.env.JWT_SECRET as string;
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET is not defined in environment variables.");
-}
-
-// Fungsi untuk mengambil dan memverifikasi token dari header Authorization
-const verifyToken = (req: Request): IAuthPayload | undefined => {
-  try {
-    const authHeader = req.headers["authorization"];
-
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.split(" ")[1];
-
-      // Verifikasi token
-      const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
-
-      // Cek apakah userId ada
-      if (decoded && decoded.userId) {
-        let userIdNumber: number;
-
-        if (typeof decoded.userId === "string") {
-          userIdNumber = parseInt(decoded.userId);
-        } else if (typeof decoded.userId === "number") {
-          userIdNumber = decoded.userId;
-        } else {
-          return undefined;
-        }
-
-        return {
-          userId: userIdNumber,
-          email: (decoded.email as string) || "",
-        };
-      }
-    }
-
-    // Jika tidak ada header atau format salah
-    return undefined;
-  } catch (error) {
-    // Jika token tidak valid, expired, atau format salah
-    return undefined;
-  }
+// Custom Auth Checker untuk GraphQL
+const customAuthChecker: AuthChecker<IContext> = ({ context }) => {
+  return !!context.payload;
 };
 
 async function main() {
@@ -89,15 +49,17 @@ async function main() {
       PostResolver,
       CommentResolver,
       NotificationResolver,
+      LogHistoryResolver,
     ],
     validate: false,
+    authChecker: customAuthChecker,
   });
 
   const server = new ApolloServer({
     schema,
     context: ({ req }): IContext => {
       // Memanggil fungsi untuk memverifikasi token dan mendapatkan payload
-      const payload = verifyToken(req);
+      const payload = verifyTokenCore(req);
 
       // Objek context yang akan diteruskan ke semua resolvers
       return { payload };

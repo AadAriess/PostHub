@@ -29,6 +29,7 @@ export class Post extends BaseEntity {
   @Column("text")
   content: string;
 
+  // Many-to-One: Hanya memiliki 1 Author
   @Field(() => User)
   @ManyToOne(() => User, (user) => user.posts)
   @JoinColumn({ name: "authorId" })
@@ -37,6 +38,7 @@ export class Post extends BaseEntity {
   @Column()
   authorId: number;
 
+  // Many-to-Many: Tag Post
   @Field(() => [Tag])
   @ManyToMany(() => Tag, (tag) => tag.posts)
   @JoinTable()

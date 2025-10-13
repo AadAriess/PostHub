@@ -5,6 +5,8 @@ import {
   BaseEntity,
   ManyToOne,
   OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from "typeorm";
 import { ObjectType, Field, ID, Int, registerEnumType } from "type-graphql";
 import { User } from "./User";
@@ -37,25 +39,30 @@ export class Comment extends BaseEntity {
   @Column({ type: "json", nullable: true })
   mentions: number[] | null;
 
-  @Field(() => GraphQLJSONObject, { nullable: true })
-  @Column({ type: "json", nullable: true })
-  editedHistory: { timestamp: Date; content: string }[] | null;
+  @Field(() => Int)
+  @Column()
+  authorId: number;
 
+  @Field(() => Int)
+  @Column()
+  postId: number;
+
+  // Many-to-One: Hanya memiliki 1 Author
   @Field(() => User)
   @ManyToOne(() => User)
   author: User;
 
+  // Many-to-One: Hanya memiliki 1 Parent (Komentar Induk)
   @Field(() => Post)
   @ManyToOne(() => Post, (post) => post.comments)
   post: Post;
 
-  // Self-Referencing untuk balasan (replies)
   // Many-to-One: Hanya memiliki 1 Parent (Komentar Induk)
   @Field(() => Comment, { nullable: true })
   @ManyToOne(() => Comment, (comment) => comment.replies, { nullable: true })
   parent: Comment;
 
-  // Kolom Foreign Key
+  // Foreign Key untuk Parent Comment
   @Field(() => Int, { nullable: true })
   @Column({ nullable: true })
   parentId: number | null;
@@ -64,4 +71,14 @@ export class Comment extends BaseEntity {
   @Field(() => [Comment], { nullable: true })
   @OneToMany(() => Comment, (comment) => comment.parent)
   replies: Comment[];
+
+  // Kolom Waktu
+  @Field()
+  @CreateDateColumn()
+  createdAt: Date;
+
+  // Kolom Waktu
+  @Field()
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

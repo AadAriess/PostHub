@@ -3,6 +3,7 @@ import { Post } from "../entity/Post";
 import { User } from "../entity/User";
 import { Tag } from "../entity/Tag";
 import { In } from "typeorm";
+import { compareEntities, createLog } from "../utils/logUtils";
 
 export class PostController {
   // GET /api/posts - Ambil semua post
@@ -89,6 +90,11 @@ export class PostController {
 
     const { title, content, tagIds } = req.body;
 
+    const currentUserId = req.user?.userId;
+    if (!currentUserId) {
+      return res.status(401).json({ message: "Authentication required." });
+    }
+
     let post = await Post.findOne({
       where: { id },
       relations: { tags: true },
@@ -97,6 +103,13 @@ export class PostController {
     if (!post) {
       return res.status(404).json({ message: "Post not found." });
     }
+
+    // Catat Data Lama
+    const oldDataToLog = {
+      title: post.title,
+      content: post.content,
+      tags: [...post.tags],
+    };
 
     if (title) post.title = title;
     if (content) post.content = content;
@@ -118,6 +131,17 @@ export class PostController {
     }
 
     await post.save();
+
+    // Catat Data Baru dan Simpan Log menggunakan utility global
+    const changesData = compareEntities(
+      oldDataToLog,
+      post,
+      ["title", "content"],
+      ["tags"]
+    );
+
+    // Mencatat log hanya jika ada perubahan
+    await createLog("Post", post.id, currentUserId, changesData, "UPDATE");
 
     const updatePost = await Post.findOne({
       where: { id: post.id },

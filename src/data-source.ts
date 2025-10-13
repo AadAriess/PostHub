@@ -5,6 +5,7 @@ import { Post } from "./entity/Post";
 import { Tag } from "./entity/Tag";
 import { Comment } from "./entity/Comment";
 import { Notification } from "./entity/Notification";
+import { LogHistory } from "./entity/LogHistory";
 
 export const AppDataSource = new DataSource({
   type: "mysql",
@@ -15,7 +16,7 @@ export const AppDataSource = new DataSource({
   database: "test_type",
   synchronize: true,
   logging: false,
-  entities: [User, Post, Tag, Comment, Notification],
+  entities: [User, Post, Tag, Comment, Notification, LogHistory],
   migrations: [],
   subscribers: [],
 });

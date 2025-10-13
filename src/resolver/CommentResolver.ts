@@ -1,9 +1,11 @@
-import { Resolver, Mutation, Arg, Int } from "type-graphql";
+import { Resolver, Mutation, Arg, Int, Ctx, Authorized } from "type-graphql";
+import { IContext } from "../types";
 import { Comment, CommentStatus } from "../entity/Comment";
 import { User } from "../entity/User";
 import { Post } from "../entity/Post";
 import { isContentSpam } from "../utils/keywordFilter";
 import { Notification, NotificationType } from "../entity/Notification";
+import { compareEntities, createLog } from "../utils/logUtils";
 
 @Resolver(Comment)
 export class CommentResolver {
@@ -104,5 +106,114 @@ export class CommentResolver {
     }
 
     return newComment;
+  }
+
+  // Mutation untuk memperbarui komentar
+  @Authorized()
+  @Mutation(() => Comment)
+  async updateComment(
+    @Ctx() { payload }: IContext,
+    @Arg("commentId", () => Int) commentId: number,
+    @Arg("content", { nullable: true }) content?: string,
+    @Arg("status", () => CommentStatus, { nullable: true })
+    status?: CommentStatus
+  ): Promise<Comment> {
+    const changerId = payload?.userId;
+    if (!changerId) {
+      throw new Error("UNAUTHORIZED: Anda harus login.");
+    }
+
+    let comment = await Comment.findOne({ where: { id: commentId } });
+
+    if (!comment) {
+      throw new Error("Comment not found.");
+    }
+
+    // Otorisasi: Hanya penulis komentar yang bisa mengedit
+    if (comment.authorId !== changerId) {
+      throw new Error(
+        "FORBIDDEN: Anda hanya dapat mengedit komentar Anda sendiri."
+      );
+    }
+
+    // Catat Data Lama
+    const oldDataToLog = {
+      content: comment.content,
+      status: comment.status,
+    };
+
+    // Terapkan Perubahan
+    if (content !== undefined) {
+      comment.content = content;
+
+      if (isContentSpam(content)) {
+        comment.status = CommentStatus.PENDING;
+      }
+    }
+    if (status !== undefined) {
+      comment.status = status;
+    }
+
+    // Simpan Perubahan Utama
+    await comment.save();
+
+    // LOGGING: Gunakan utility global
+    const changesData = compareEntities(oldDataToLog, comment, [
+      "content",
+      "status",
+    ]);
+
+    await createLog("Comment", comment.id, changerId, changesData, "UPDATE");
+
+    return comment;
+  }
+
+  // Mutation untuk menghapus komentar
+  @Authorized()
+  @Mutation(() => Boolean)
+  async deleteComment(
+    @Ctx() { payload }: IContext,
+    @Arg("commentId", () => Int) commentId: number
+  ): Promise<boolean> {
+    const currentUserId = payload?.userId;
+    if (!currentUserId) {
+      throw new Error("UNAUTHORIZED: Anda harus login.");
+    }
+
+    const comment = await Comment.findOne({ where: { id: commentId } });
+
+    if (!comment) {
+      return true;
+    }
+
+    // Otorisasi: Hanya penulis yang bisa menghapus
+    if (comment.authorId !== currentUserId) {
+      throw new Error(
+        "FORBIDDEN: Anda hanya dapat menghapus komentar Anda sendiri."
+      );
+    }
+
+    // Catat data komentar yang dihapus sebelum dihapus
+    const deletedCommentData = {
+      content: comment.content,
+      status: comment.status,
+      authorId: comment.authorId,
+      postId: comment.postId,
+    };
+
+    // Hapus komentar dan semua balasannya
+    await comment.remove();
+
+    // LOGGING: Catat penghapusan
+    const emptyChanges = { old: deletedCommentData, new: {} };
+    await createLog(
+      "Comment",
+      commentId,
+      currentUserId,
+      emptyChanges,
+      "DELETE"
+    );
+
+    return true;
   }
 }

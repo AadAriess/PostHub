@@ -15,7 +15,6 @@ export class UserResolver {
   // Query untuk mengambil semua user
   @Query(() => [User])
   async users(): Promise<User[]> {
-    // Menggunakan TypeORM (BaseEntity) untuk mengambil semua data
     return User.find();
   }
 
