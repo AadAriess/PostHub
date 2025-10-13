@@ -8,6 +8,7 @@ import {
 import { ObjectType, Field, ID } from "type-graphql";
 import { Post } from "./Post";
 import { GraphQLJSONObject } from "graphql-type-json";
+import { Notification } from "./Notification";
 
 @ObjectType()
 @Entity()
@@ -53,4 +54,10 @@ export class User extends BaseEntity {
     onDelete: "CASCADE",
   })
   posts: Post[];
+
+  // One-to-Many
+  // User menerima notifikasi
+  @Field(() => [Notification])
+  @OneToMany(() => Notification, (notification) => notification.recipient)
+  notifications: Notification[];
 }

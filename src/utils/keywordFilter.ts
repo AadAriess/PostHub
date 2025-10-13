@@ -1,5 +1,5 @@
 const BANNED_WORDS: string[] = [
-  // 1. Kata-kata kasar (Contoh, ganti dengan kata yang relevan di bahasa Anda)
+  // 1. Kata-kata kasar
   "bodoh",
   "gila",
   "tolol",
