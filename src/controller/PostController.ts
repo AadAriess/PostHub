@@ -15,20 +15,11 @@ export class PostController {
 
   // POST /api/posts - Membuat post baru
   async create(req: Request, res: Response) {
-    const { title, content, authorId, tagIds, parentId } = req.body;
+    const { title, content, authorId, tagIds } = req.body;
 
     const author = await User.findOneBy({ id: authorId });
     if (!author) {
       return res.status(404).json({ message: "User not found." });
-    }
-
-    if (parentId) {
-      const parentPost = await Post.findOneBy({ id: parentId });
-      if (!parentPost) {
-        return res
-          .status(400)
-          .json({ message: `Parent Post with ID ${parentId} not found.` });
-      }
     }
 
     let tags: Tag[] = [];
@@ -42,13 +33,15 @@ export class PostController {
       }
     }
 
+    const { id, firstName, lastName } = author;
+    const authorForPost = { id, firstName, lastName };
+
     const newPost = Post.create({
       title,
       content,
       authorId: author.id,
-      author: author,
+      author: authorForPost,
       tags: tags,
-      parentId: parentId || null,
     });
     await newPost.save();
 

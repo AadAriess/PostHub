@@ -4,6 +4,8 @@ import { User } from "../entity/User";
 import * as bcrypt from "bcrypt";
 import * as jwt from "jsonwebtoken";
 import { AuthResponse } from "../types/AuthResponse";
+import { RegisterInput } from "../types/RegisterInput";
+import { UpdateUserInput } from "../types/UpdateUserInput";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -26,29 +28,24 @@ export class UserResolver {
   // --- MUTATION (Manipulasi Data) ---
   // Mutation untuk membuat user baru
   @Mutation(() => AuthResponse)
-  async register(
-    @Arg("firstName") firstName: string,
-    @Arg("lastName") lastName: string,
-    @Arg("age", () => Int) age: number,
-    @Arg("email") email: string,
-    @Arg("password") password: string
-  ): Promise<AuthResponse> {
+  async register(@Arg("data") data: RegisterInput): Promise<AuthResponse> {
     // Cek Email
-    const existingUser = await User.findOneBy({ email });
+    const existingUser = await User.findOneBy({ email: data.email });
     if (existingUser) {
       throw new Error("Email sudah terdaftar.");
     }
 
     // Hash Password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
     // Buat User
     const newUser = User.create({
-      firstName,
-      lastName,
-      age,
-      email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      age: data.age,
+      email: data.email,
       password: hashedPassword,
+      address: data.address,
     });
     await newUser.save();
 
@@ -85,6 +82,20 @@ export class UserResolver {
     });
 
     return { token, user: user };
+  }
+
+  // Mutation untuk mengupdate user
+  @Mutation(() => User, { nullable: true })
+  async updateUser(@Arg("data") data: UpdateUserInput): Promise<User | null> {
+    const user = await User.findOneBy({ id: data.id });
+    if (!user) {
+      throw new Error("User tidak ditemukan.");
+    }
+
+    Object.assign(user, data);
+
+    await user.save();
+    return user;
   }
 
   // Mutation untuk menghapus user

@@ -3,6 +3,7 @@ import { DataSource } from "typeorm";
 import { User } from "./entity/User";
 import { Post } from "./entity/Post";
 import { Tag } from "./entity/Tag";
+import { Comment } from "./entity/Comment";
 
 export const AppDataSource = new DataSource({
   type: "mysql",
@@ -11,9 +12,9 @@ export const AppDataSource = new DataSource({
   username: "root",
   password: "",
   database: "test_type",
-  synchronize: true,
+  synchronize: false,
   logging: false,
-  entities: [User, Post, Tag],
+  entities: [User, Post, Tag, Comment],
   migrations: [],
   subscribers: [],
 });

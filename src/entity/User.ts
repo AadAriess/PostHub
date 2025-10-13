@@ -7,6 +7,7 @@ import {
 } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
 import { Post } from "./Post";
+import { GraphQLJSONObject } from "graphql-type-json";
 
 @ObjectType()
 @Entity()
@@ -33,6 +34,18 @@ export class User extends BaseEntity {
 
   @Column()
   password: string;
+
+  @Field(() => GraphQLJSONObject, { nullable: true })
+  @Column({ type: "json", nullable: true })
+  address: {
+    street: string;
+    city: string;
+    country: string;
+  } | null;
+
+  @Field()
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  createdAt: Date;
 
   // One-to-Many
   // User memiliki banyak Post

@@ -20,6 +20,7 @@
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "graphql": "^16.11.0",
+    "graphql-type-json": "^0.3.2",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.14.0",
     "reflect-metadata": "^0.2.2",

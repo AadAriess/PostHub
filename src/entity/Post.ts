@@ -11,19 +11,25 @@ import {
 } from "typeorm";
 import { User } from "./User";
 import { Tag } from "./Tag";
+import { Comment } from "./Comment";
+import { ObjectType, Field, ID, Int } from "type-graphql";
 
+@ObjectType()
 @Entity()
 export class Post extends BaseEntity {
+  @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Field()
   @Column()
   title: string;
 
+  @Field()
   @Column("text")
   content: string;
 
-  // Many-to-One
+  @Field(() => User)
   @ManyToOne(() => User, (user) => user.posts)
   @JoinColumn({ name: "authorId" })
   author: User;
@@ -31,24 +37,13 @@ export class Post extends BaseEntity {
   @Column()
   authorId: number;
 
-  // Many-to-Many
+  @Field(() => [Tag])
   @ManyToMany(() => Tag, (tag) => tag.posts)
   @JoinTable()
   tags: Tag[];
 
-  // Self-Referencing (Tree Entity)
-  // Many-to-One ke Post: Hanya memiliki 1 Parent
-  @ManyToOne(() => Post, (post) => post.children, {
-    nullable: true,
-    onDelete: "CASCADE",
-  })
-  @JoinColumn({ name: "parentId" })
-  parent: Post;
-
-  @Column({ nullable: true })
-  parentId: number | null;
-
-  // One-to-Many ke Post: Dapat memiliki banyak Children
-  @OneToMany(() => Post, (post) => post.parent)
-  children: Post[];
+  // One-to-Many: Komentar Post (Baru!)
+  @Field(() => [Comment], { nullable: true })
+  @OneToMany(() => Comment, (comment) => comment.post)
+  comments: Comment[];
 }

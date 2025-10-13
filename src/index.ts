@@ -9,6 +9,8 @@ import { AppDataSource } from "./data-source";
 // Import Resolver
 import { UserResolver } from "./resolver/UserResolver";
 import { TagResolver } from "./resolver/TagResolver";
+import { PostResolver } from "./resolver/PostResolver";
+import { CommentResolver } from "./resolver/CommentResolver";
 
 // Import Routes REST
 import RestRoutes from "./routes";
@@ -31,7 +33,7 @@ async function main() {
 
   // 4. Setup GraphQL (Seperti sebelumnya)
   const schema = await buildSchema({
-    resolvers: [UserResolver, TagResolver],
+    resolvers: [UserResolver, TagResolver, PostResolver, CommentResolver],
     validate: false,
   });
 
