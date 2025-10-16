@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyTokenCore } from "../utils/jwtUtils"; // ⬅️ Import fungsi inti
+import { verifyTokenCore } from "../utils/jwtUtils";
 import { IAuthPayload } from "../types";
 
 declare global {

@@ -3,6 +3,7 @@ import { Post } from "../entity/Post";
 import { User } from "../entity/User";
 import { Tag } from "../entity/Tag";
 import { In } from "typeorm";
+import { publishNewPost } from "../socket/socket";
 import { compareEntities, createLog } from "../utils/logUtils";
 
 export class PostController {
@@ -35,37 +36,58 @@ export class PostController {
 
   // POST /api/posts - Membuat post baru
   async create(req: Request, res: Response) {
-    const { title, content, authorId, tagIds } = req.body;
+    try {
+      const { title, content, authorId, tagIds } = req.body;
 
-    const author = await User.findOneBy({ id: authorId });
-    if (!author) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    let tags: Tag[] = [];
-    if (tagIds && tagIds.length > 0) {
-      tags = await Tag.findBy({ id: In(tagIds) });
-
-      if (tags.length !== tagIds.length) {
-        return res
-          .status(400)
-          .json({ message: "One or more tag IDs are invalid." });
+      const author = await User.findOneBy({ id: authorId });
+      if (!author) {
+        return res.status(404).json({ message: "User not found." });
       }
+
+      let tags: Tag[] = [];
+      if (tagIds && tagIds.length > 0) {
+        tags = await Tag.findBy({ id: In(tagIds) });
+
+        if (tags.length !== tagIds.length) {
+          return res
+            .status(400)
+            .json({ message: "One or more tag IDs are invalid." });
+        }
+      }
+
+      const { id, firstName, lastName } = author;
+      const authorForPost = { id, firstName, lastName };
+
+      const newPost = Post.create({
+        title,
+        content,
+        authorId: author.id,
+        author: authorForPost,
+        tags: tags,
+      });
+
+      await newPost.save();
+
+      // Siapkan payload yang akan dikirim ke client
+      const payload = {
+        id: newPost.id,
+        title: newPost.title,
+        content: newPost.content,
+        author: authorForPost,
+        tags: tags.map((t) => ({ id: t.id, name: t.name })),
+        createdAt: (newPost as any).createdAt || new Date().toISOString(),
+      };
+
+      // Publish event ke Redis -> akan diteruskan ke Socket.IO
+      publishNewPost(payload).catch((e) => {
+        console.error("Failed to publish new post:", e);
+      });
+
+      return res.status(201).json(newPost);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Internal server error." });
     }
-
-    const { id, firstName, lastName } = author;
-    const authorForPost = { id, firstName, lastName };
-
-    const newPost = Post.create({
-      title,
-      content,
-      authorId: author.id,
-      author: authorForPost,
-      tags: tags,
-    });
-    await newPost.save();
-
-    return res.status(201).json(newPost);
   }
 
   // GET /api/posts/:id - Ambil post berdasarkan ID

@@ -29,6 +29,13 @@ export class Post extends BaseEntity {
   @Column("text")
   content: string;
 
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  imagePath?: string;
+
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  createdAt: Date;
+
   // Many-to-One: Hanya memiliki 1 Author
   @Field(() => User)
   @ManyToOne(() => User, (user) => user.posts)

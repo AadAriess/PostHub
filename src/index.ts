@@ -4,14 +4,8 @@ import * as express from "express";
 import { buildSchema, AuthChecker } from "type-graphql";
 import "dotenv/config";
 import RestRoutes from "./routes";
-
-// Import koneksi TypeORM
 import { AppDataSource } from "./data-source";
-
-// Import Type dan Interface Context
 import { IContext } from "./types";
-
-// Import Resolver
 import { UserResolver } from "./resolver/UserResolver";
 import { TagResolver } from "./resolver/TagResolver";
 import { PostResolver } from "./resolver/PostResolver";
@@ -19,14 +13,14 @@ import { NotificationResolver } from "./resolver/NotificationResolver";
 import { LogHistoryResolver } from "./resolver/LogHistoryResolver";
 import { CommentResolver } from "./resolver/CommentResolver";
 import { verifyTokenCore } from "./utils/jwtUtils";
+import * as http from "http";
+import { initSocket } from "./socket/socket";
 
-// Custom Auth Checker untuk GraphQL
 const customAuthChecker: AuthChecker<IContext> = ({ context }) => {
   return !!context.payload;
 };
 
 async function main() {
-  // 1. Inisialisasi Koneksi Database TypeORM
   try {
     await AppDataSource.initialize();
     console.log("✅ Data Source TypeORM terinisialisasi.");
@@ -35,13 +29,12 @@ async function main() {
     return;
   }
 
-  // 2. Setup Server Express
   const app = express();
 
-  // 3. Daftarkan Routes RESTful
+  // Middleware & routes
   app.use("/api", express.json(), RestRoutes);
 
-  // 4. Setup GraphQL
+  // GraphQL setup
   const schema = await buildSchema({
     resolvers: [
       UserResolver,
@@ -55,27 +48,28 @@ async function main() {
     authChecker: customAuthChecker,
   });
 
-  const server = new ApolloServer({
+  const apolloServer = new ApolloServer({
     schema,
     context: ({ req }): IContext => {
-      // Memanggil fungsi untuk memverifikasi token dan mendapatkan payload
       const payload = verifyTokenCore(req);
-
-      // Objek context yang akan diteruskan ke semua resolvers
       return { payload };
     },
   });
 
-  // 5. Terapkan Middleware Apollo Server
-  await server.start();
-  server.applyMiddleware({ app, path: "/graphql" });
+  await apolloServer.start();
+  apolloServer.applyMiddleware({ app, path: "/graphql" });
 
-  // 6. Jalankan Server
-  const PORT = 4000;
-  app.listen(PORT, () => {
+  // Buat HTTP Server & inisialisasi Socket.IO
+  const server = http.createServer(app);
+  initSocket(server);
+
+  const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
+
+  server.listen(PORT, () => {
     console.log(`🚀 Server berjalan di http://localhost:${PORT}/`);
     console.log(`💻 GraphQL Playground: http://localhost:${PORT}/graphql`);
     console.log(`🌐 REST API Endpoints: http://localhost:${PORT}/api/posts`);
+    console.log(`⚡ Socket.IO aktif di ws://localhost:${PORT}`);
   });
 }
 
