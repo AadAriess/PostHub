@@ -15,11 +15,11 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  // Panggil logika inti verifikasi
+  console.log("Authorization header:", req.headers["authorization"]);
+
   const payload = verifyTokenCore(req);
 
   if (!payload) {
-    // Jika gagal, kirim error HTTP 401 dan hentikan request REST
     return res
       .status(401)
       .json({ message: "Authentication required or token invalid." });

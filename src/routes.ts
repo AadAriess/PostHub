@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { PostController } from "./controller/PostController";
 import { authMiddleware } from "./middleware/authMiddleware";
+import { uploadMiddleware } from "./middleware/uploadMiddleware";
 
 const router = Router();
 const postController = new PostController();
@@ -10,7 +11,12 @@ router.get("/posts", postController.getAll);
 
 // Endpoint POST untuk membuat post baru
 // Hanya pengguna yang terautentikasi yang dapat membuat post
-router.post("/posts", authMiddleware, postController.create);
+router.post(
+  "/posts",
+  authMiddleware,
+  uploadMiddleware.single("image"),
+  postController.create
+);
 
 // Endpoint PUT untuk update post
 // Hanya pengguna terautentikasi (dan pemilik) yang dapat mengupdate

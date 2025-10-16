@@ -15,6 +15,8 @@ import { CommentResolver } from "./resolver/CommentResolver";
 import { verifyTokenCore } from "./utils/jwtUtils";
 import * as http from "http";
 import { initSocket } from "./socket/socket";
+import * as path from "path";
+import * as cors from "cors";
 
 const customAuthChecker: AuthChecker<IContext> = ({ context }) => {
   return !!context.payload;
@@ -31,10 +33,26 @@ async function main() {
 
   const app = express();
 
-  // Middleware & routes
+  // CORS Configuration
+  app.use(
+    cors({
+      origin: [
+        "http://localhost:3000", // frontend Next.js
+        "https://studio.apollographql.com", // Apollo Sandbox
+      ],
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    })
+  );
+
+  // Serve static file upload
+  app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+  // Middleware untuk JSON & REST API
   app.use("/api", express.json(), RestRoutes);
 
-  // GraphQL setup
+  // GraphQL Schema
   const schema = await buildSchema({
     resolvers: [
       UserResolver,
@@ -48,18 +66,26 @@ async function main() {
     authChecker: customAuthChecker,
   });
 
+  // Apollo Server
   const apolloServer = new ApolloServer({
     schema,
     context: ({ req }): IContext => {
       const payload = verifyTokenCore(req);
       return { payload };
     },
+    introspection: true, // Bolehkan introspeksi di semua lingkungan
   });
 
   await apolloServer.start();
-  apolloServer.applyMiddleware({ app, path: "/graphql" });
 
-  // Buat HTTP Server & inisialisasi Socket.IO
+  // Apply middleware TANPA override cors
+  apolloServer.applyMiddleware({
+    app,
+    path: "/graphql",
+    cors: false,
+  });
+
+  // Socket.io + HTTP Server
   const server = http.createServer(app);
   initSocket(server);
 

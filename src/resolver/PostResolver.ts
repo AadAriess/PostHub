@@ -40,7 +40,7 @@ export class PostResolver {
     @Arg("id", () => Int) id: number
   ): Promise<Post | null> {
     const post = await Post.findOne({
-      where: { id: id },
+      where: { id },
       relations: {
         author: true,
         tags: true,
@@ -49,6 +49,7 @@ export class PostResolver {
         id: true,
         title: true,
         content: true,
+        imagePath: true,
         authorId: true,
         author: {
           id: true,
@@ -59,29 +60,25 @@ export class PostResolver {
       },
     });
 
-    if (!post) {
-      return null;
-    }
+    if (!post) return null;
 
-    // Muat Komentar Level 1 secara terpisah dengan filtering
-    const commentsLevelOne = await Comment.find({
-      where: {
-        post: { id: id },
-        parentId: null,
-      },
-      relations: {
-        author: true,
-        replies: {
-          author: true,
-          replies: {
-            author: true,
-          },
-        },
-      },
+    const allComments = await Comment.find({
+      where: { post: { id } },
+      relations: { author: true },
+      order: { id: "ASC" },
     });
 
-    // Pasangkan hasil filter ke Post.comments
-    (post as any).comments = commentsLevelOne;
+    // Menambahkan properti replyToUser pada komentar
+    for (const comment of allComments) {
+      if (comment.parentId) {
+        const parent = allComments.find((c) => c.id === comment.parentId);
+        if (parent && parent.author) {
+          comment.replyToUser = parent.author.firstName;
+        }
+      }
+    }
+
+    (post as any).comments = allComments;
 
     return post;
   }

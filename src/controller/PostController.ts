@@ -57,10 +57,12 @@ export class PostController {
 
       const { id, firstName, lastName } = author;
       const authorForPost = { id, firstName, lastName };
+      const imagePath = req.file ? `/uploads/${req.file.filename}` : undefined;
 
       const newPost = Post.create({
         title,
         content,
+        imagePath,
         authorId: author.id,
         author: authorForPost,
         tags: tags,
@@ -73,6 +75,7 @@ export class PostController {
         id: newPost.id,
         title: newPost.title,
         content: newPost.content,
+        imagePath: newPost.imagePath,
         author: authorForPost,
         tags: tags.map((t) => ({ id: t.id, name: t.name })),
         createdAt: (newPost as any).createdAt || new Date().toISOString(),

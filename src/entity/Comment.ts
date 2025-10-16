@@ -32,12 +32,12 @@ export class Comment extends BaseEntity {
   content: string;
 
   @Field(() => CommentStatus)
-  @Column({ type: "enum", enum: CommentStatus, default: CommentStatus.PENDING })
+  @Column({
+    type: "enum",
+    enum: CommentStatus,
+    default: CommentStatus.PENDING,
+  })
   status: CommentStatus;
-
-  @Field(() => GraphQLJSONObject, { nullable: true })
-  @Column({ type: "json", nullable: true })
-  mentions: number[] | null;
 
   @Field(() => Int)
   @Column()
@@ -47,37 +47,42 @@ export class Comment extends BaseEntity {
   @Column()
   postId: number;
 
-  // Many-to-One: Hanya memiliki 1 Author
+  // Many-to-One: Author
   @Field(() => User)
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
   author: User;
 
-  // Many-to-One: Hanya memiliki 1 Parent (Komentar Induk)
+  // Many-to-One: Post
   @Field(() => Post)
-  @ManyToOne(() => Post, (post) => post.comments)
+  @ManyToOne(() => Post, (post) => post.comments, { onDelete: "CASCADE" })
   post: Post;
 
-  // Many-to-One: Hanya memiliki 1 Parent (Komentar Induk)
+  // Many-to-One: Parent Comment (Komentar Induk)
   @Field(() => Comment, { nullable: true })
-  @ManyToOne(() => Comment, (comment) => comment.replies, { nullable: true })
-  parent: Comment;
+  @ManyToOne(() => Comment, (comment) => comment.replies, {
+    nullable: true,
+    onDelete: "CASCADE",
+  })
+  parent?: Comment;
 
-  // Foreign Key untuk Parent Comment
   @Field(() => Int, { nullable: true })
   @Column({ nullable: true })
-  parentId: number | null;
+  parentId?: number | null;
 
-  // One-to-Many: Dapat memiliki banyak Balasan (Anak)
+  // One-to-Many: Replies (Komentar Balasan)
   @Field(() => [Comment], { nullable: true })
-  @OneToMany(() => Comment, (comment) => comment.parent)
-  replies: Comment[];
+  @OneToMany(() => Comment, (comment) => comment.parent, {
+    cascade: true,
+  })
+  replies?: Comment[];
 
-  // Kolom Waktu
+  @Field({ nullable: true })
+  replyToUser?: string;
+
   @Field()
   @CreateDateColumn()
   createdAt: Date;
 
-  // Kolom Waktu
   @Field()
   @UpdateDateColumn()
   updatedAt: Date;
