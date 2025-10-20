@@ -33,6 +33,7 @@ export class Post extends BaseEntity {
   @Column({ nullable: true })
   imagePath?: string;
 
+  @Field()
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   createdAt: Date;
 
