@@ -5,6 +5,7 @@ import { Tag } from "../entity/Tag";
 import { In } from "typeorm";
 import { publishNewPost } from "../socket/socket";
 import { compareEntities, createLog } from "../utils/logUtils";
+import { getSuggestedTags } from "../utils/aiTagSuggestion";
 
 export class PostController {
   // GET /api/posts - Ambil semua post
@@ -69,6 +70,28 @@ export class PostController {
       });
 
       await newPost.save();
+
+      if (content && content.length > 20) {
+        const suggested = await getSuggestedTags(content);
+
+        if (suggested.length > 0) {
+          for (const tagName of suggested) {
+            // Cek apakah tag sudah ada
+            let tag = await Tag.findOneBy({ name: tagName });
+            if (!tag) {
+              tag = Tag.create({ name: tagName });
+              await tag.save();
+            }
+
+            // Cegah duplikasi tag
+            if (!newPost.tags.some((t) => t.name === tag.name)) {
+              newPost.tags.push(tag);
+            }
+          }
+
+          await newPost.save();
+        }
+      }
 
       // Siapkan payload yang akan dikirim ke client
       const payload = {

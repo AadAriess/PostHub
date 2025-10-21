@@ -2,7 +2,6 @@ import { Resolver, Query, Arg, Int } from "type-graphql";
 import { Post } from "../entity/Post";
 import { Comment } from "../entity/Comment";
 import { InputType, Field } from "type-graphql";
-import { Like, Between, LessThan } from "typeorm";
 
 @InputType()
 class FilterConditionInput {

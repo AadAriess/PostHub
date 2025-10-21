@@ -12,7 +12,7 @@ import {
 import { User } from "./User";
 import { Tag } from "./Tag";
 import { Comment } from "./Comment";
-import { ObjectType, Field, ID, Int } from "type-graphql";
+import { ObjectType, Field, ID } from "type-graphql";
 
 @ObjectType()
 @Entity()
