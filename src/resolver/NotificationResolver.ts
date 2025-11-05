@@ -4,6 +4,7 @@ import { IContext } from "../types";
 
 @Resolver(Notification)
 export class NotificationResolver {
+  // Query untuk mengambil notifikasi user yang login
   @Query(() => [Notification], {
     description: "Mengambil daftar notifikasi untuk user yang login",
   })

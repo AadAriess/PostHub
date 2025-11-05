@@ -17,6 +17,8 @@ import * as http from "http";
 import { initSocket } from "./socket/socket";
 import * as path from "path";
 import * as cors from "cors";
+import { FeedResolver } from "./resolver/FeedResolver";
+import { FollowResolver } from "./resolver/FollowResolver";
 
 const customAuthChecker: AuthChecker<IContext> = ({ context }) => {
   return !!context.payload;
@@ -61,6 +63,8 @@ async function main() {
       CommentResolver,
       NotificationResolver,
       LogHistoryResolver,
+      FeedResolver,
+      FollowResolver,
     ],
     validate: false,
     authChecker: customAuthChecker,

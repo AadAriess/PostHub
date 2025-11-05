@@ -9,6 +9,7 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { Post } from "./Post";
 import { GraphQLJSONObject } from "graphql-type-json";
 import { Notification } from "./Notification";
+import { Follower } from "./Follower";
 
 @ObjectType()
 @Entity()
@@ -60,4 +61,12 @@ export class User extends BaseEntity {
   @Field(() => [Notification])
   @OneToMany(() => Notification, (notification) => notification.recipient)
   notifications: Notification[];
+
+  // Relasi Follower
+  @OneToMany(() => Follower, (follow) => follow.follower)
+  following: Follower[];
+
+  // Relasi Following
+  @OneToMany(() => Follower, (follow) => follow.following)
+  followers: Follower[];
 }
