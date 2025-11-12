@@ -6,6 +6,11 @@ import { Post } from "../entity/Post";
 import { isContentSpam } from "../utils/keywordFilter";
 import { Notification, NotificationType } from "../entity/Notification";
 import { compareEntities, createLog } from "../utils/logUtils";
+import {
+  publishNewComment,
+  publishUpdatedComment,
+  publishDeletedComment,
+} from "../socket/socket";
 
 @Resolver(Comment)
 export class CommentResolver {
@@ -61,6 +66,20 @@ export class CommentResolver {
     });
 
     await newComment.save();
+
+    await publishNewComment({
+      id: newComment.id,
+      content: newComment.content,
+      parentId: newComment.parentId,
+      createdAt: newComment.createdAt,
+      postId: newComment.postId,
+      author: {
+        id: author.id,
+        firstName: author.firstName,
+        lastName: author.lastName,
+      },
+      replyToUser: parentComment?.author.firstName ?? null,
+    });
 
     let recipient: User | null = null;
     let notificationType: NotificationType = NotificationType.COMMENT;
@@ -157,6 +176,13 @@ export class CommentResolver {
     // Simpan Perubahan Utama
     await comment.save();
 
+    await publishUpdatedComment({
+      id: comment.id,
+      content: comment.content,
+      status: comment.status,
+      postId: comment.postId,
+    });
+
     // LOGGING: Gunakan utility global
     const changesData = compareEntities(oldDataToLog, comment, [
       "content",
@@ -203,6 +229,8 @@ export class CommentResolver {
 
     // Hapus komentar dan semua balasannya
     await comment.remove();
+
+    await publishDeletedComment({ id: commentId, postId: comment.postId });
 
     // LOGGING: Catat penghapusan
     const emptyChanges = { old: deletedCommentData, new: {} };

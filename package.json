@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@apollo/server": "^5.0.0",
+    "@elastic/elasticsearch": "^9.2.0",
     "apollo-server-express": "^3.13.0",
     "bcrypt": "^6.0.0",
     "class-validator": "^0.14.2",

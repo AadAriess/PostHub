@@ -52,8 +52,11 @@ export class Post extends BaseEntity {
   @JoinTable()
   tags: Tag[];
 
-  // One-to-Many: Komentar Post (Baru!)
+  // One-to-Many: Komentar Post
   @Field(() => [Comment], { nullable: true })
-  @OneToMany(() => Comment, (comment) => comment.post)
+  @OneToMany(() => Comment, (comment) => comment.post, {
+    cascade: true,
+    onDelete: "CASCADE",
+  })
   comments: Comment[];
 }

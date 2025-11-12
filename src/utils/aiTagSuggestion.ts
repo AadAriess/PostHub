@@ -5,7 +5,7 @@ import fetch from "node-fetch";
  */
 export async function getSuggestedTags(content: string): Promise<string[]> {
   const HF_API_URL =
-    "https://api-inference.huggingface.co/models/ml6team/keyphrase-extraction-kbir-inspec";
+    "https://router.huggingface.co/hf-inference/models/ml6team/keyphrase-extraction-kbir-inspec";
 
   try {
     const response = await fetch(HF_API_URL, {
