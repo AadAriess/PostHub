@@ -16,7 +16,7 @@ class FilterConditionInput {
 }
 
 @InputType()
-class FilterGroupInput {
+export class FilterGroupInput {
   @Field()
   operator: string;
 

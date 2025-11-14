@@ -13,6 +13,7 @@ import { getSuggestedTags } from "../utils/aiTagSuggestion";
 import * as fs from "fs";
 import * as path from "path";
 import esClient from "../lib/esClient";
+import { invalidateFeedCacheForFollowers } from "../cache/feedCache";
 
 export class PostController {
   // GET /api/posts - Ambil semua post
@@ -114,6 +115,9 @@ export class PostController {
           await newPost.save();
         }
       }
+
+      // Invalidate feed cache untuk followers author
+      await invalidateFeedCacheForFollowers(author.id);
 
       // Siapkan payload yang akan dikirim ke client
       const payload = {
@@ -273,6 +277,9 @@ export class PostController {
       updatedAt: new Date().toISOString(),
     });
 
+    // Invalidate feed cache untuk followers author
+    await invalidateFeedCacheForFollowers(post.author.id);
+
     return res.json(post);
   }
 
@@ -332,6 +339,9 @@ export class PostController {
     publishDeletedPost({ id: post.id }).catch((e) => {
       console.error("Failed to publish new post:", e);
     });
+
+    // Invalidate feed cache untuk followers author
+    await invalidateFeedCacheForFollowers(post.author.id);
 
     return res.json({ message: "✅ Post deleted successfully." });
   }

@@ -2,6 +2,7 @@ import { Resolver, Query, Ctx } from "type-graphql";
 import { Post } from "../entity/Post";
 import { Follower } from "../entity/Follower";
 import { GraphQLError } from "graphql";
+import { getCachedFeed, setCachedFeed } from "../cache/feedCache";
 
 @Resolver()
 export class FeedResolver {
@@ -15,6 +16,13 @@ export class FeedResolver {
     }
 
     const userId = payload.userId;
+
+    // Cek cache feed terlebih dahulu
+    const cachedFeed = await getCachedFeed(userId);
+    if (cachedFeed) {
+      console.log(`CACHE HIT feed:${userId}`);
+      return cachedFeed;
+    }
 
     // Ambil semua user yang diikuti oleh user login
     const following = await Follower.find({
@@ -32,6 +40,9 @@ export class FeedResolver {
       .where("post.authorId IN (:...ids)", { ids: followingIds })
       .orderBy("post.createdAt", "DESC")
       .getMany();
+
+    // Simpan ke cache sebelum mengembalikan
+    await setCachedFeed(userId, posts);
 
     return posts;
   }

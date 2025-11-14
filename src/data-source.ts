@@ -7,6 +7,7 @@ import { Comment } from "./entity/Comment";
 import { Notification } from "./entity/Notification";
 import { LogHistory } from "./entity/LogHistory";
 import { Follower } from "./entity/Follower";
+import { FilterPreset } from "./entity/FilterPreset";
 
 export const AppDataSource = new DataSource({
   type: "mysql",
@@ -17,7 +18,16 @@ export const AppDataSource = new DataSource({
   database: "test_type",
   synchronize: true,
   logging: false,
-  entities: [User, Post, Tag, Comment, Notification, LogHistory, Follower],
+  entities: [
+    User,
+    Post,
+    Tag,
+    Comment,
+    Notification,
+    LogHistory,
+    Follower,
+    FilterPreset,
+  ],
   migrations: [],
   subscribers: [],
 });

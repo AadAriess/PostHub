@@ -10,6 +10,7 @@ import { Post } from "./Post";
 import { GraphQLJSONObject } from "graphql-type-json";
 import { Notification } from "./Notification";
 import { Follower } from "./Follower";
+import { FilterPreset } from "./FilterPreset";
 
 @ObjectType()
 @Entity()
@@ -69,4 +70,8 @@ export class User extends BaseEntity {
   // Relasi Following
   @OneToMany(() => Follower, (follow) => follow.following)
   followers: Follower[];
+
+  // Relasi FilterPreset
+  @OneToMany(() => FilterPreset, (preset) => preset.user)
+  filterPresets: FilterPreset[];
 }
